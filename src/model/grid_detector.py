@@ -49,7 +49,6 @@ class GridDetector:
 
         return accumulator, rhos, thetas
 
-    @torch.compile
     def detect_angles(self, image: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         device = image.device
         thetas = torch.linspace(0, torch.pi, self.num_thetas, device=device) - torch.pi / 4
@@ -91,7 +90,6 @@ class GridDetector:
             fft_accumulator[:, second_peak],
         )
 
-    @torch.compile
     def detect_grid(self, image: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         theta1, theta2, fft_accumulator1, fft_accumulator2 = self.detect_angles(image)
         accumulator1 = torch.fft.rfft(fft_accumulator1, n=fft_accumulator1.shape[0] * 2).abs()[:500]
