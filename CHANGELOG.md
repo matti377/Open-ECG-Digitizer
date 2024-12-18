@@ -1,6 +1,35 @@
 # CHANGELOG
 
 
+## v0.3.0 (2024-12-18)
+
+### Bug Fixes
+
+* fix: rename to enable __call__ ([`7047811`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/70478110c09a85dfc90d7a9630454ee02d576e2c))
+
+* fix: remove torch.compile from inside model class ([`23ec2fe`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/23ec2febe7d51d55a7c3c727e03e2a1d0c64ea68))
+
+* fix: remove superfluous argument ([`398d925`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/398d9254ed25722cc4f34321256f30c31f552c78))
+
+### Documentation
+
+* docs: add docstrings to grid detectors ([`097b6f4`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/097b6f4f4c36fd344036d1a884f50a4f291340d4))
+
+### Features
+
+* feat: multi-scale grid detection ([`7328f4e`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/7328f4edb59d0acfce8f82c40198643e5206ebd8))
+
+### Testing
+
+* test: make sure multiscale grid detector runs ([`ed3e9d0`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/ed3e9d0f1afaee14cb9251cf8e5ceeaff053bc14))
+
+### Unknown
+
+* Merge pull request #4 from Ahus-AIM/adaptive_grid
+
+Multi Scale Grid Detection ([`51b7194`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/51b71942af5dee56488285bce67ddacbe673f1fb))
+
+
 ## v0.2.0 (2024-12-16)
 
 ### Bug Fixes
