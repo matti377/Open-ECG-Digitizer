@@ -83,7 +83,7 @@ class MulticlassBinaryCrossEntropyLoss(nn.Module):
     def compute_loss(pred: torch.Tensor, target_one_hot: torch.Tensor, signal_class: int) -> torch.Tensor:
         prob: torch.Tensor = F.softmax(pred, dim=1)
         signal_prob: torch.Tensor = prob[:, signal_class, :, :]
-        loss: torch.Tensor = nn.BCELoss()(signal_prob, target_one_hot[:, signal_class, :, :].float())
+        loss: torch.Tensor = nn.BCELoss()(signal_prob, target_one_hot[:, signal_class, :, :].type_as(signal_prob))
         return loss
 
     @property
