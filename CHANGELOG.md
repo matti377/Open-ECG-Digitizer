@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## v0.6.0 (2024-12-23)
+
+### Features
+
+* feat: perspective detection for ecg paper ([`e99d2ad`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/e99d2ad63237908593472003d12fde5aa8395a00))
+
+### Testing
+
+* test: perspective detector returns reasonable src points ([`49e4c32`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/49e4c32722fd957cee6400c783693f02f067c1ba))
+
+### Unknown
+
+* Merge pull request #7 from Ahus-AIM/perspective
+
+Perspective detection ([`156abac`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/156abacdcb1093a004c1abf0c75bc49661a5632f))
+
+
 ## v0.5.0 (2024-12-20)
 
 ### Features
