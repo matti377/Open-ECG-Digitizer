@@ -17,7 +17,7 @@ TRAIN:
     class_path: 'torch.amp.GradScaler'
     KWARGS: {}
   CRITERION:
-    class_path: 'src.loss.loss.WeightedDiceLoss'
+    class_path: 'src.loss.loss.WeightedCrossEntropyLoss'
     KWARGS:
       alpha: 2.0
   KWARGS:
@@ -43,10 +43,10 @@ HYPERPARAMETER_SEARCH:
       KWARGS:
         dims:
           SAMPLE_TYPE: 'ray.tune.grid_search'
-          VALUES: [[4, 8, 16]]
+          VALUES: [[16, 32, 64, 64, 64]]
         depths:
           SAMPLE_TYPE: 'ray.tune.grid_search'
-          VALUES: [[2, 2, 2]]
+          VALUES: [[2, 2, 2, 2, 2]]
 
 DATALOADER:
   class_path: 'torch.utils.data.DataLoader'
@@ -95,6 +95,7 @@ DATASET:
       ecg_scan_path: '../../data/ecg/ecg_scans/val'
       ecg_mask_path: '../../data/ecg/ecg_masks/val'
       load_n: 1
+    TRANSFORM: *TRANSFORM_COMMON
   TEST:
     KWARGS:
       ecg_scan_path: '../../data/ecg/ecg_scans/test'
