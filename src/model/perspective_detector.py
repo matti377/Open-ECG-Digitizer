@@ -1,6 +1,5 @@
 from typing import Tuple, Dict
 from torchvision.transforms.functional import perspective
-from scipy.ndimage import uniform_filter
 from skimage.filters import threshold_multiotsu
 from skimage.morphology import remove_small_objects, skeletonize
 from torch.nn.functional import avg_pool2d
@@ -57,6 +56,13 @@ class PerspectiveDetector:
         # Remove most of the negative rhos
         rhos = rhos[num_rhos // 3 :]
         accumulator = accumulator[num_rhos // 3 :]
+
+        # The edges of the accumulator are set to the values of the adjacent cells
+        # to avoid edge effects in the line extraction
+        accumulator[:, 0] = accumulator[:, 1]
+        accumulator[:, -1] = accumulator[:, -2]
+        accumulator[:, num_thetas // 2 - 1] = accumulator[:, num_thetas // 2 - 2]
+        accumulator[:, num_thetas // 2] = accumulator[:, num_thetas // 2 + 1]
 
         return accumulator, rhos
 
@@ -293,7 +299,7 @@ class PerspectiveDetector:
         else:
             flat_image = image.float()
 
-        blurred = avg_pool2d(flat_image.unsqueeze(0).unsqueeze(0), 9, stride=1, padding=4).squeeze()
+        blurred = avg_pool2d(flat_image.unsqueeze(0).unsqueeze(0), 35, stride=1, padding=17).squeeze()
         differenced = flat_image - blurred
 
         local_minima_candidates: torch.Tensor = differenced < self.quantile(differenced, 0.1)
@@ -303,8 +309,7 @@ class PerspectiveDetector:
         )  # type: ignore
         local_minima_candidates = torch.tensor(local_minima_candidates_np, dtype=torch.bool).to(device)
 
-        flat_image_np = flat_image.detach().cpu().numpy()
-        flat_image_np = flat_image_np / uniform_filter(flat_image_np, size=35)
+        flat_image_np = (flat_image / blurred).detach().cpu().numpy()
         thresholds = threshold_multiotsu(flat_image_np, 4)  # type: ignore
         flat_image_np = (flat_image_np > thresholds[0]) & (flat_image_np < thresholds[1])
         flat_image_np = remove_small_objects(flat_image_np, min_size=16, connectivity=2)  # type: ignore
@@ -333,8 +338,7 @@ class PerspectiveDetector:
         )
         x_coords_clamped = torch.clamp(x_coords.round(), 0, W - 1).long()
         sampled_values = accumulator[y_coords.long(), x_coords_clamped]
-        derivatives = torch.diff(sampled_values, dim=0)
-        variances = torch.var(derivatives, dim=0)
+        variances = torch.var(sampled_values, dim=0)
         return variances
 
     def extract_line(
