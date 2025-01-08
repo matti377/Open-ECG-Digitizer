@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v0.9.0 (2025-01-08)
+
+### Features
+
+* feat: perspective and updated random resize ([`a0b48cc`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/a0b48cc9e14996cbce2c66c3d2eeb0a97a3b83cf))
+
+* feat: cache transformed images to disc ([`37f8716`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/37f8716c664714d5cf94c7d6683e74d23a9ddda3))
+
+### Unknown
+
+* Merge pull request #11 from Ahus-AIM/improved_training_loop
+
+Cache transforms ([`da8f686`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/da8f68660d46eaba9cfda31cd007114e654deb63))
+
+
 ## v0.8.1 (2025-01-06)
 
 ### Bug Fixes
