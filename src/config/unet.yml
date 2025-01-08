@@ -43,10 +43,12 @@ HYPERPARAMETER_SEARCH:
       KWARGS:
         dims:
           SAMPLE_TYPE: 'ray.tune.grid_search'
-          VALUES: [[8, 32, 64, 64, 128, 128]]
+          KWARGS:
+            values: [[8, 32, 64, 64, 128, 128]]
         depths:
           SAMPLE_TYPE: 'ray.tune.grid_search'
-          VALUES: [[2, 2, 2, 2, 2, 2]]
+          KWARGS:
+            values: [[2, 2, 2, 2, 2, 2]]
 
 DATALOADER:
   class_path: 'torch.utils.data.DataLoader'

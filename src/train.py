@@ -224,16 +224,16 @@ def load_and_train(ray_config: CN, config: CN) -> None:
     return None
 
 
-def load_hyperparameter_search(config: CN) -> Any | CN:
+def load_hyperparameter_search(config: CN) -> Any | Dict[str, Any]:
     # TODO: Add support for nested and conditional spaces (https://docs.ray.io/en/latest/tune/faq.html#nested-spaces).
     if "SAMPLE_TYPE" in config:
-        return import_class_from_path(config["SAMPLE_TYPE"])(config["VALUES"])
+        return import_class_from_path(config["SAMPLE_TYPE"])(**config["KWARGS"])
 
-    parsed_config = CN()
+    parsed_config = {}
     for key, value in config.items():
-        if isinstance(value, CN):
+        if isinstance(value, dict):
             parsed_config[key] = load_hyperparameter_search(value)
-    return CN(parsed_config)
+    return parsed_config
 
 
 def main(config: CN) -> Optional[ExperimentAnalysis]:
