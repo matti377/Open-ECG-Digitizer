@@ -246,6 +246,10 @@ def main(config: CN) -> Optional[ExperimentAnalysis]:
         **config.HYPERPARAMETER_SEARCH.SCHEDULER.KWARGS
     )
 
+    # Set seed for Ray Tune's random search. If you remove this line, you will
+    # get different configurations each time you run the script.
+    np.random.seed(42)
+
     result = ray.tune.run(
         partial(load_and_train, config=config),
         resources_per_trial={"cpu": 2, "gpu": 1},
