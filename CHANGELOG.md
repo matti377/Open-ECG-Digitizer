@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.11.0 (2025-01-08)
+
+### Features
+
+* feat: better snake init and interpolation of missing values ([`3979227`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/397922770e6fcac6712ab0c60eded8c405e1fc46))
+
+### Unknown
+
+* Merge pull request #13 from Ahus-AIM/snake_interp
+
+feat: better snake init and interpolation of missing values ([`db36e33`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/db36e33d217741666ea0cb1a5887cfb4beda1ebc))
+
+
 ## v0.10.0 (2025-01-08)
 
 ### Features
