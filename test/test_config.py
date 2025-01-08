@@ -7,6 +7,11 @@ def test_unet() -> None:
     main(cfg)
 
 
+def test_segformer() -> None:
+    cfg = get_cfg("./test/test_data/config/segformer.yml")
+    main(cfg)
+
+
 def test_unet_compilation() -> None:
     cfg = get_cfg("./test/test_data/config/unet_compilation.yml")
     main(cfg)

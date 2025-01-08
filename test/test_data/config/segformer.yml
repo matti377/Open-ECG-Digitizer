@@ -1,0 +1,67 @@
+MODEL:
+  class_path: 'src.model.huggingface.HuggingFaceSegmentation'
+  KWARGS:
+    model_class_path: 'transformers.AutoModelForSemanticSegmentation'
+    processor_class_path: 'transformers.SegformerImageProcessor'
+    model_path: 'mattmdjaga/segformer_b2_clothes'
+    processor_attributes: 
+      do_resize: True
+      do_rescale: True
+    model_kwargs: 
+      num_labels: 3
+      ignore_mismatched_sizes: True
+    unfreeze_last_n_layers: 1
+
+TRAIN:
+  COMPILE: False
+  CUDNN_BENCHMARK: False
+  OPTIMIZER:
+    class_path: 'torch.optim.SGD'
+    KWARGS:
+      lr: 0.001
+  CRITERION:
+    class_path: 'src.loss.loss.WeightedCrossEntropyLoss'
+    KWARGS:
+      alpha: 2.0
+  KWARGS:
+    epochs: 1
+    metrics: []
+    device: 'cpu'
+    metrics:
+      -
+        class_path: 'src.loss.loss.MulticlassBinaryCrossEntropyLoss'
+        fit: false
+
+HYPERPARAMETER_SEARCH:
+  SCHEDULER:
+    class_path: 'ray.tune.schedulers.ASHAScheduler'
+    KWARGS:
+      metric: 'val_loss'
+      mode: 'min'
+      max_t: 3000
+      grace_period: 20
+      reduction_factor: 4
+  SEARCH_SPACE:
+
+DATALOADER:
+  class_path: 'torch.utils.data.DataLoader'
+  KWARGS:
+    batch_size: 1
+    shuffle: False
+    num_workers: 2
+
+DATASET:
+  class_path: 'src.dataset.ecg_scan.ECGScanDataset'
+  KWARGS:
+    load_n: 1
+    ecg_scan_path: '../../test/test_data/data/ecg_scans'
+    ecg_mask_path: '../../test/test_data/data/ecg_masks/masks'
+
+  TRAIN:
+    KWARGS:
+      load_n: 2
+
+  VAL:
+    KWARGS: {}
+  TEST:
+    KWARGS: {}

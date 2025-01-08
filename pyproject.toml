@@ -21,6 +21,7 @@ module = [
     "yacs.*",
     "torchvision.*",
     "scipy.*",
-    "scikit-image.*"
+    "scikit-image.*",
+    "transformers.*"
 ]
 ignore_missing_imports = true

@@ -15,3 +15,4 @@ yacs==0.1.8
 ray[data,train,tune]==2.40.0
 tensorboard==2.18.0
 scikit-image==0.24.0
+transformers==4.47.1
