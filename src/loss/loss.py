@@ -51,28 +51,49 @@ class WeightedDiceLoss(nn.Module):
         Args:
             alpha (float): Extra weight assigned to the signal class.
             signal_class (int, optional): The class that is considered the signal class.
+            union_exponent (int, optional): The exponent to raise the union to. Set to 2 to match the loss
+                function for V-Net.
         """
         super(WeightedDiceLoss, self).__init__()
         self.alpha: float = alpha
         self.signal_class: int = signal_class
         self.union_exponent: int = union_exponent
 
-    def forward(self, pred: torch.Tensor, target_one_hot: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
-        pred_probs: torch.Tensor = F.softmax(pred, dim=1)
+    def forward(
+        self, pred: torch.Tensor, target_one_hot: torch.Tensor, eps: float = 1e-6, probs: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        if bool(probs is not None) != bool(target_one_hot.shape[1] == 1):
+            raise ValueError("If probs is provided, the targets must be binary and vice versa.")
+        is_binary = probs is not None
 
-        intersection: torch.Tensor = torch.sum(pred_probs * target_one_hot, dim=(2, 3))
-        union: torch.Tensor = torch.sum(pred_probs.pow(self.union_exponent), dim=(2, 3)) + torch.sum(
-            target_one_hot.pow(self.union_exponent), dim=(2, 3)
+        pred_probs: torch.Tensor = F.softmax(pred, dim=1) if not is_binary else probs  # type: ignore
+
+        # Must cast to double in order to avoid overflow.
+        intersection: torch.Tensor = torch.sum(pred_probs.double() * target_one_hot.double(), dim=(2, 3))
+        union: torch.Tensor = torch.sum(pred_probs.double().pow(self.union_exponent), dim=(2, 3)) + torch.sum(
+            target_one_hot.double().pow(self.union_exponent), dim=(2, 3)
         )
         dice: torch.Tensor = 1 - (2 * intersection) / (union + eps)
 
-        multiplier: torch.Tensor = torch.ones_like(dice).to(target_one_hot.device)
-        multiplier[:, self.signal_class] = self.alpha
-        multiplier /= multiplier.sum()
+        if not is_binary:
+            multiplier: torch.Tensor = torch.ones_like(dice).to(target_one_hot.device)
+            multiplier[:, self.signal_class] = self.alpha
+            multiplier /= multiplier.mean()
 
-        dice = dice * multiplier
+            dice = dice * multiplier
 
         return dice.mean()
+
+
+class MulticlassBinaryDiceLoss(MulticlassBinaryLoss):
+    def __init__(self, alpha: float = 1.0, signal_class: int = SIGNAL_CLASS, union_exponent: int = 1) -> None:
+        super(MulticlassBinaryDiceLoss, self).__init__(
+            WeightedDiceLoss, signal_class, alpha=alpha, union_exponent=union_exponent
+        )
+
+    @property
+    def __name__(self) -> str:
+        return "multiclass_binary_dice_loss"
 
 
 class WeightedCrossEntropyLoss(nn.Module):
