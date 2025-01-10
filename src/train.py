@@ -290,7 +290,7 @@ def main(config: CN) -> Optional[ExperimentAnalysis]:
 
     result = ray.tune.run(
         partial(load_and_train, config=config),
-        resources_per_trial={"cpu": 2, "gpu": 1},
+        resources_per_trial={"cpu": 4, "gpu": 1},
         config=ray_config,
         num_samples=1,
         scheduler=scheduler,

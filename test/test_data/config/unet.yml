@@ -13,7 +13,7 @@ TRAIN:
     class_path: 'src.utils.EarlyStopper'
     KWARGS:
       metric: 'val_loss'
-      patience: 2
+      patience: 1
       delta: 0
   OPTIMIZER:
     class_path: 'torch.optim.Adam'

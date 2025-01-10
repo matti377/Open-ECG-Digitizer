@@ -18,7 +18,7 @@ TRAIN:
     class_path: 'src.utils.EarlyStopper'
     KWARGS:
       metric: 'val_loss'
-      patience: 5
+      patience: 1
       delta: 0
   OPTIMIZER:
     class_path: 'torch.optim.AdamW'
@@ -85,8 +85,10 @@ DATALOADER:
   KWARGS:
     batch_size: 1
     shuffle: False
-    num_workers: 3
+    num_workers: 2
     pin_memory: True
+    pin_memory_device: 'cuda:0'
+    prefetch_factor: 2
 
 DATASET:
   class_path: 'src.dataset.ecg_scan.ECGScanDataset'
@@ -99,6 +101,7 @@ DATASET:
     KWARGS:
       ecg_scan_path: '/data/ecg_dataset/ecg_scans/val_transformed'
       ecg_mask_path: '/data/ecg_dataset/ecg_masks/val_transformed'
+      load_n: 20
   TEST:
     KWARGS:
       ecg_scan_path: '/data/ecg_dataset/ecg_scans/test'
