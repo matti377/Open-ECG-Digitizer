@@ -1,11 +1,13 @@
+import torch.optim.optimizer
 from yacs.config import CfgNode as CN
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 from copy import deepcopy
 from torch.utils.data import DataLoader
 from torch import nn
+from ray.tune import Stopper
 import importlib
 import math
-from ray.tune import Stopper
+import torch
 
 
 class EarlyStopper(Stopper):
@@ -81,3 +83,29 @@ def merge_ray_config_with_config(config: CN, ray_config: CN) -> CN:
         if k in model_kwargs:
             config.MODEL.KWARGS[k] = v
     return config
+
+
+class CosineToConstantLR(torch.optim.lr_scheduler.LRScheduler):
+    def __init__(
+        self,
+        optimizer: torch.optim.Optimizer,
+        T_max: int,
+        eta_min: float = 0.0,
+        eta_min_divisor: Optional[float] = None,
+    ):  # noqa: D107
+        self.T_max = T_max
+        self.eta_min = eta_min
+        self.eta_min_divisor = eta_min_divisor
+        super().__init__(optimizer, -1)
+
+    def get_lr(self) -> List[float]:
+        """Retrieve the learning rate of each parameter group."""
+        torch.optim.lr_scheduler._warn_get_lr_called_within_step(self)
+
+        def _get_lr(base_lr: float) -> float:
+            min_lr = self.eta_min if self.eta_min_divisor is None else base_lr / self.eta_min_divisor
+            if self._step_count - 1 >= self.T_max:
+                return min_lr
+            return min_lr + (base_lr - min_lr) * (1 + (math.cos(math.pi * (self._step_count - 1) / self.T_max))) / 2
+
+        return [_get_lr(base_lr) for base_lr in self.base_lrs]

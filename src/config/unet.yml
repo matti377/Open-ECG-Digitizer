@@ -9,6 +9,11 @@ MODEL:
 TRAIN:
   COMPILE: True
   CUDNN_BENCHMARK: False
+  LR_SCHEDULER:
+    class_path: 'src.utils.CosineToConstantLR'
+    KWARGS:
+      T_max: 2000
+      eta_min_divisor: 10.0
   STOPPER:
     class_path: 'src.utils.EarlyStopper'
     KWARGS:
@@ -18,7 +23,7 @@ TRAIN:
   OPTIMIZER:
     class_path: 'torch.optim.AdamW'
     KWARGS:
-      lr: 0.0003
+      lr: 0.001
   MIXED_PRECISION_SCALER:
     class_path: 'torch.amp.GradScaler'
     KWARGS: {}
