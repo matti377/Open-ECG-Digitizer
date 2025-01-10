@@ -162,7 +162,7 @@ def train(
             val_metric = metric(val_predictions, val_targets)
             calculated_metrics[f"train_{name}"] = train_metric.float().numpy()
             calculated_metrics[f"val_{name}"] = val_metric.float().numpy()
-            if val_metric > best_metrics[name]:
+            if val_metric < best_metrics[name]:
                 best_metrics[name] = val_metric
                 is_new_best_metric = True
 
