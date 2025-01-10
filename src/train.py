@@ -64,8 +64,9 @@ def run_epoch(
                 loss = criterion(output, target)
 
                 if eval:
-                    pass
-                elif mixed_precision_scaler:
+                    continue
+
+                if mixed_precision_scaler:
                     mixed_precision_scaler.scale(loss).backward()
                     mixed_precision_scaler.step(optimizer)  # type: ignore
                     mixed_precision_scaler.update()
