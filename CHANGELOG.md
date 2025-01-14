@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v0.14.1 (2025-01-14)
+
+### Bug Fixes
+
+* fix: start calculating metrics
+
+The metrics were not calculated due to naming issues and incorrect
+control flow. ([`88728ea`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/88728ea59056132efcf989b1bcbfa4260c9f59da))
+
+* fix: do not train on validation set ([`6c634f0`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/6c634f0e4deba4d8a80b6082a57cbf61e5c2a1be))
+
+### Unknown
+
+* Merge pull request #17 from Ahus-AIM/fix_report_of_metrics
+
+Fix report of metrics ([`0480c5d`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/0480c5db1fcb6c1398115de16355a13fafd2105a))
+
+
 ## v0.14.0 (2025-01-13)
 
 ### Bug Fixes
