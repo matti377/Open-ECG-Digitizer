@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.14.3 (2025-01-15)
+
+### Bug Fixes
+
+* fix: use individual states for each run in EarlyStopper
+
+EarlyStopper used the same variables for each run, causing previous runs
+to affect the current run, and stop earlier than expected. ([`603ba36`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/603ba36724db78cc60adc2231b4fa5c013f0acaa))
+
+### Unknown
+
+* Merge pull request #18 from Ahus-AIM/fix_early_stopper_global_issue
+
+fix: use individual states for each run in EarlyStopper ([`b960167`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/b960167375fed5a239e614770e6bd1eaa616add6))
+
+
 ## v0.14.2 (2025-01-15)
 
 ### Bug Fixes
