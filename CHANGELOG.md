@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v0.15.0 (2025-01-16)
+
+### Features
+
+* feat: create initial hyp search plan for unet ([`c18e3cb`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/c18e3cbce4406ce1a897ccca89821fefe773b4c6))
+
+* feat: create WeightedDiceLossSquared ([`7692b81`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/7692b813472fbd96a14e9231d9e106c3c363b6de))
+
+### Unknown
+
+* Merge pull request #20 from Ahus-AIM/initial_unet_segmentation
+
+Initial unet segmentation ([`ecf5894`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/ecf5894c52afcb9840d8c47d69358fadeddf00d8))
+
+
 ## v0.14.3 (2025-01-15)
 
 ### Bug Fixes

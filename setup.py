@@ -1,6 +1,6 @@
 from setuptools import setup
 
-__version__ = "0.14.3"
+__version__ = "0.15.0"
 
 setup(
     name="Electrocardiogram-Digitization",
