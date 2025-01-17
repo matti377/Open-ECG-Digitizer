@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v1.0.0 (2025-01-17)
+
+### Breaking
+
+* feat: support png masks instead of npy masks
+
+BREAKING CHANGE: bump the dataset to have png masks instead of npy masks ([`548f991`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/548f99163ecd937a96ba744cfa1d0453ee1a22ce))
+
+### Bug Fixes
+
+* fix: raise error on empty dataloader ([`7fb0792`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/7fb0792cef5430b516eafe32acae81270aac8f03))
+
+### Refactoring
+
+* refactor: scans and masks are in same folder ([`e4be434`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/e4be434e5062eb7b67752d5056a570de14d1eb51))
+
+### Unknown
+
+* Merge pull request #21 from Ahus-AIM/npy_to_png
+
+npy masks to png masks ([`f36591c`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/f36591c78b188c964f68be4609156e2de5ff03fd))
+
+
 ## v0.15.0 (2025-01-16)
 
 ### Features
