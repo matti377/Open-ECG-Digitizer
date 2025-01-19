@@ -67,12 +67,6 @@ class Snake(torch.nn.Module):
         autodetect_num_peaks_min: int = 3,
         autodetect_num_peaks_max: int = 6,
         min_distance: int = 45,
-        left_percentile: float = 0.01,
-        right_percentile: float = 0.99,
-        top_percentile: float = 0.01,
-        bottom_percentile: float = 0.99,
-        horizontal_margin: int = 1,
-        vertical_margin: int = 1,
         interpolate_missing: bool = True,
         matching_sim_threshold: float = 0.9,
         set_zero_threshold: float = 0.5,
@@ -80,13 +74,10 @@ class Snake(torch.nn.Module):
         """
         Args:
             num_peaks (int): The desired number of peaks to identify (should be equal to number of ECG signals).
+            autodetect_num_peaks (bool): Whether to autodetect the number of peaks.
+            autodetect_num_peaks_min (int): The minimum number of peaks to autodetect.
+            autodetect_num_peaks_max (int): The maximum number of peaks to autodetect.
             min_distance (int): The minimum distance between signals during initialization.
-            left_percentile (float): The percentile to crop the left side of the input tensor.
-            right_percentile (float): The percentile to crop the right side of the input tensor.
-            top_percentile (float): The percentile to crop the top side of the input tensor.
-            bottom_percentile (float): The percentile to crop the bottom side of the input tensor.
-            horizontal_margin (int): The number of pixels to extend the horizontal cropping.
-            vertical_margin (int): The number of pixels to extend the vertical cropping.
             interpolate_missing (bool): Whether to interpolate missing chunks via pattern matching during initalization.
             matching_sim_threshold (float): The threshold for matching similarity.
             set_zero_threshold (float): The threshold for setting values in preds to zero, as a fraction of the maximum value in preds.
@@ -97,60 +88,21 @@ class Snake(torch.nn.Module):
         self.autodetect_num_peaks_min = autodetect_num_peaks_min
         self.autodetect_num_peaks_max = autodetect_num_peaks_max
         self.min_distance = min_distance
-        self.left_percentile = left_percentile
-        self.right_percentile = right_percentile
-        self.top_percentile = top_percentile
-        self.bottom_percentile = bottom_percentile
-        self.horizontal_margin = horizontal_margin
-        self.vertical_margin = vertical_margin
         self.matching_sim_threshold = matching_sim_threshold
         self.set_zero_threshold = set_zero_threshold
         self.interpolate_missing = interpolate_missing
-        self._check_input()
 
     def fit(self, preds: torch.Tensor) -> None:
         """
         Args:
             preds (torch.Tensor): A 2D tensor of predictions, with values of magnitude within (0,1).
         """
-        self.cropped_preds = self._crop_preds(preds)
+        self.preds = preds
         if self.autodetect_num_peaks:
             self._autodetect_num_peaks()
         self.snake = torch.nn.Parameter(self._initialize_snake()).to(preds.device)
         if self.interpolate_missing:
             self._interpolate_missing_chunks()
-
-    def _check_input(self) -> None:
-        assert 0 <= self.left_percentile <= 1, "left_percentile must be in range 0,1"
-        assert 0 <= self.right_percentile <= 1, "right_percentile must be in range 0,1"
-        assert 0 <= self.top_percentile <= 1, "top_percentile must be in range 0,1"
-        assert 0 <= self.bottom_percentile <= 1, "bottom_percentile must be in range 0,1"
-        assert 0 < self.num_peaks <= 12, "num_peaks must be in range 1,12"
-        assert 0 < self.min_distance <= 200, "min_distance must be in range 1,200"
-        assert 0 <= self.horizontal_margin, "horizontal_margin must be positive"
-        assert 0 <= self.vertical_margin, "vertical_margin must be positive"
-        assert 0 <= self.matching_sim_threshold <= 1, "matching_sim_threshold must be in range 0,1"
-        assert 0 <= self.set_zero_threshold <= 1, "set_zero_threshold must be in range 0,1"
-
-    def _crop_preds(self, preds: torch.Tensor) -> torch.Tensor:
-        x_projection = preds.sum(0)
-        y_projection = preds.sum(1)
-        cumulative_sum_x = x_projection.cumsum(0) / x_projection.cumsum(0)[-1]
-        cumulative_sum_y = y_projection.cumsum(0) / y_projection.cumsum(0)[-1]
-
-        left_bound = int((cumulative_sum_x - self.left_percentile).abs().argmin().item())
-        right_bound = int((cumulative_sum_x - self.right_percentile).abs().argmin().item())
-        top_bound = int((cumulative_sum_y - self.top_percentile).abs().argmin().item())
-        bottom_bound = int((cumulative_sum_y - self.bottom_percentile).abs().argmin().item())
-
-        left_bound = max(0, left_bound - self.horizontal_margin)
-        right_bound = min(preds.shape[1], right_bound + self.horizontal_margin)
-        top_bound = max(0, top_bound - self.vertical_margin)
-        bottom_bound = min(preds.shape[0], bottom_bound + self.vertical_margin)
-
-        cropped_preds = preds[top_bound:bottom_bound, left_bound:right_bound]
-
-        return cropped_preds
 
     def _find_contiguous_chunks(self) -> list[torch.Tensor]:
         nan_mask = torch.isnan(self.snake.data).any(0) & ~torch.isnan(self.snake.data).all(0)
@@ -182,7 +134,7 @@ class Snake(torch.nn.Module):
         Returns:
             torch.Tensor: A 2D tensor containing the aligned peaks.
         """
-        preds = filter_local_maxima(self.cropped_preds, self.min_distance)
+        preds = filter_local_maxima(self.preds, self.min_distance)
         preds[preds < preds.max() * self.set_zero_threshold] = 0
 
         nonzero_preds = (preds > 0).sum(0)
@@ -273,8 +225,8 @@ class Snake(torch.nn.Module):
             self.snake.data[c][(self.snake.data[c] - channel_medians[c]).abs() > diff / 2] = torch.nan
 
     def _autodetect_num_peaks(self) -> None:
-        """Projects the cropped_preds tensor by summation, smooths the projection and sets number of peaks based on number of local maxima."""
-        preds_copy = self.cropped_preds.clone()
+        """Projects the preds tensor by summation, smooths the projection and sets number of peaks based on number of local maxima."""
+        preds_copy = self.preds.clone()
         preds_copy[preds_copy < 2 * preds_copy.max() / 3] = 0
         projected_preds = preds_copy.pow(2).sum(1, keepdim=True)
         first, last = projected_preds.nonzero(as_tuple=True)[0][[0, -1]]
