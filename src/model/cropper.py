@@ -1,5 +1,5 @@
 import torch
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from torchvision.transforms.functional import perspective
 
 
@@ -237,7 +237,7 @@ class Cropper(torch.nn.Module):
         return -y * torch.tan(theta) + rho / torch.cos(theta)
 
     def apply_perspective(
-        self, input_tensor: torch.Tensor, source_points: torch.Tensor, fill_value: float = 0
+        self, input_tensor: torch.Tensor, source_points: torch.Tensor, fill_value: float | List[float] = 0
     ) -> torch.Tensor:
         original_shape = input_tensor.shape
         if input_tensor.ndim == 2:  # (H, W)
