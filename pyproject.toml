@@ -22,6 +22,7 @@ module = [
     "torchvision.*",
     "scipy.*",
     "scikit-image.*",
-    "transformers.*"
+    "transformers.*",
+    "sklearn.neighbors"
 ]
 ignore_missing_imports = true
