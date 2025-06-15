@@ -1,14 +1,17 @@
-import torch.optim.optimizer
-from yacs.config import CfgNode as CN
-from typing import Any, Dict, List, Tuple, Optional
-from copy import deepcopy
-from torch.utils.data import DataLoader
-from torch import nn
-from ray.tune import Stopper
-from collections import defaultdict
 import importlib
 import math
+import os
+from collections import defaultdict
+from copy import deepcopy
+from typing import Any, Dict, List, Optional, Tuple
+
+import matplotlib.pyplot as plt
 import torch
+import torch.optim.optimizer
+from ray.tune import Stopper
+from torch import nn
+from torch.utils.data import DataLoader
+from yacs.config import CfgNode as CN
 
 
 class EarlyStopper(Stopper):
@@ -110,3 +113,33 @@ class CosineToConstantLR(torch.optim.lr_scheduler.LRScheduler):
             return min_lr + (base_lr - min_lr) * (1 + (math.cos(math.pi * (self._step_count - 1) / self.T_max))) / 2
 
         return [_get_lr(base_lr) for base_lr in self.base_lrs]
+
+
+class SavePlotsEveryN:
+    def __init__(self, plot_path: str, n: int, split_name: str) -> None:
+        self.n = n
+        self.plot_path = plot_path
+        self.counter = 0
+        os.makedirs(os.path.dirname(self.plot_path), exist_ok=True)
+        assert isinstance(n, int) and n > 0, "n must be a positive integer"
+
+    def __call__(self, pred: torch.Tensor, target_rgb: torch.Tensor) -> torch.Tensor:
+        if (self.counter % self.n == 0) and (self.counter > 0):
+            pred = torch.softmax(pred, dim=1).permute(0, 2, 3, 1)[0].detach().cpu()
+            pred = pred[:, :, 0:3]
+            target_rgb = target_rgb.permute(0, 2, 3, 1)[0].detach().cpu()
+
+            fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+            axs[0].imshow(pred)
+            axs[1].imshow(target_rgb)
+            plt.tight_layout()
+            plt.savefig(self.plot_path, dpi=300)
+            plt.close()
+
+        self.counter += 1
+
+        return torch.Tensor([0])
+
+    @property
+    def __name__(self) -> str:
+        return f"SavePlotsEveryN(n={self.n})"
