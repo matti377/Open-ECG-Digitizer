@@ -1,7 +1,8 @@
-from matplotlib.patches import Arc
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Arc
 
 CANVAS_SIZE = (1700, 2200)
 SRC_POINT_H = (-100, 4_500)
