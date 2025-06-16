@@ -222,35 +222,52 @@ class Snake(torch.nn.Module):
         channel_medians = torch.nanmedian(self.snake.data, dim=1).values
         diff = channel_medians.diff().abs().mean().item()
         for c in range(self.snake.data.shape[0]):
-            self.snake.data[c][(self.snake.data[c] - channel_medians[c]).abs() > diff / 2] = torch.nan
+            self.snake.data[c][(self.snake.data[c] - channel_medians[c]).abs() > 3 * diff / 4] = torch.nan
+
+    def _blur(self, tensor: torch.Tensor, kernel_size: int = 3) -> torch.Tensor:
+        """
+        Applies a Gaussian blur to the input tensor.
+
+        Args:
+            tensor (torch.Tensor): The input tensor to be blurred.
+            kernel_size (int): The size of the Gaussian kernel.
+
+        Returns:
+            torch.Tensor: The blurred tensor.
+        """
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        kernel = torchvision.transforms.GaussianBlur(kernel_size, sigma=1.0)
+        blurred_tensor: torch.Tensor = kernel(tensor.unsqueeze(0).unsqueeze(0)).squeeze(0).squeeze(0)
+        return blurred_tensor
 
     def _autodetect_num_peaks(self) -> None:
         """Projects the preds tensor by summation, smooths the projection and sets number of peaks based on number of local maxima."""
-        preds_copy = self.preds.clone()
-        preds_copy[preds_copy < 2 * preds_copy.max() / 3] = 0
-        projected_preds = preds_copy.pow(2).sum(1, keepdim=True)
-        first, last = projected_preds.nonzero(as_tuple=True)[0][[0, -1]]
-        projected_preds = projected_preds[first : last + 1]
-        base_kernel_size = projected_preds.shape[0] // 3
-        if not base_kernel_size % 2:
-            base_kernel_size += 1
-        projected_preds = torch.nn.functional.pad(
-            projected_preds, (0, 0, base_kernel_size // 4, base_kernel_size // 4), value=projected_preds.min().item()
-        )
-        blurred_preds = torchvision.transforms.functional.gaussian_blur(
-            projected_preds.unsqueeze(0).unsqueeze(0),
-            kernel_size=(1, base_kernel_size),
-            sigma=(1, base_kernel_size // 8 + 1),
-        ).squeeze()
+        logits = torch.log(1 - self.preds.clamp(1e-6, 1 - 1e-6)) / torch.log(
+            self.preds.clamp(1e-6, 1 - 1e-6)
+        )  # logit transform
+        logits = self._blur(logits)
+        probs_raw = torch.softmax(logits, dim=0)
+        probs = (probs_raw - 1.1 / probs_raw.shape[0]).clamp(0)  # normalize to zero mean
 
-        # count the number of local maxima
-        max_pooled = torch.nn.functional.max_pool1d(
-            blurred_preds.unsqueeze(0).unsqueeze(0), kernel_size=3, stride=1, padding=1
-        ).squeeze()
-        max_indices = (blurred_preds == max_pooled).nonzero(as_tuple=True)[0]
-        num_peaks = len(max_indices)
+        zero_mask = probs == 0
+        nonzero_mask = ~zero_mask
+        lines = zero_mask[1:] & nonzero_mask[:-1]
 
-        self.num_peaks = min(max(num_peaks, self.autodetect_num_peaks_min), self.autodetect_num_peaks_max)
+        line_counts = lines.sum(0)
+
+        value_counts = torch.bincount(line_counts)
+
+        most_common_value = value_counts.argmax().item()
+        most_common_count = value_counts.max().item()
+
+        if most_common_count < line_counts.shape[0] * 0.5:
+            print(
+                f"Warning: Autodetected number of peaks ({most_common_value}) is not reliable, "
+                f"consider setting it manually or adjusting the autodetection parameters."
+            )
+
+        self.num_peaks = int(most_common_value)
 
     def forward(self) -> torch.Tensor:
         self.snake.data = torch.sort(self.snake.data, dim=0)[0]
