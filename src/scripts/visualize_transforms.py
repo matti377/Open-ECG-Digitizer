@@ -1,8 +1,10 @@
 import os
+
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
 from numpy import load
+
 from src.transform.vision import ComposedTransform
 
 

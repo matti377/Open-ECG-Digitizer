@@ -1,5 +1,6 @@
+from typing import Dict, List, Tuple
+
 import torch
-from typing import Dict, Tuple, List
 from torchvision.transforms.functional import perspective
 
 
@@ -60,14 +61,19 @@ class Cropper(torch.nn.Module):
         lower_bound_vertical: int,
         upper_bound_vertical: int,
     ) -> torch.Tensor:
-        rho_min_horizontal = rhos[-lower_bound_horizontal]
-        rho_max_horizontal = rhos[-upper_bound_horizontal]
-        theta_min_horizontal = thetas_horizontal[-lower_bound_horizontal]
-        theta_max_horizontal = thetas_horizontal[-upper_bound_horizontal]
-        rho_min_vertical = rhos[-lower_bound_vertical]
-        rho_max_vertical = rhos[-upper_bound_vertical]
-        theta_min_vertical = thetas_vertical[-lower_bound_vertical]
-        theta_max_vertical = thetas_vertical[-upper_bound_vertical]
+
+        rhos = rhos.flip(0)
+        thetas_horizontal = thetas_horizontal.flip(0)
+        thetas_vertical = thetas_vertical.flip(0)
+
+        rho_min_horizontal = rhos[lower_bound_horizontal]
+        rho_max_horizontal = rhos[upper_bound_horizontal]
+        theta_min_horizontal = thetas_horizontal[lower_bound_horizontal]
+        theta_max_horizontal = thetas_horizontal[upper_bound_horizontal]
+        rho_min_vertical = rhos[lower_bound_vertical]
+        rho_max_vertical = rhos[upper_bound_vertical]
+        theta_min_vertical = thetas_vertical[lower_bound_vertical]
+        theta_max_vertical = thetas_vertical[upper_bound_vertical]
 
         # This will later be input to torchvision.transforms.functional.perspective and should have the format:
         # List containing four lists of two integers corresponding to four corners [top-left, top-right, bottom-right, bottom-left]
@@ -160,13 +166,15 @@ class Cropper(torch.nn.Module):
 
     def _get_indices(self, values: torch.Tensor) -> Tuple[int, int]:
         cumsum_values = values.cumsum(0) / values.sum()
-        lower_bound = int((cumsum_values >= self.percentiles[0]).nonzero().min())
-        upper_bound = int((cumsum_values <= self.percentiles[1]).nonzero().max() + 2)
+        lower_bound: int = int((cumsum_values >= self.percentiles[0]).nonzero().min())
+        upper_bound: int = int((cumsum_values <= self.percentiles[1]).nonzero().max())
+        width = (upper_bound - lower_bound) / (self.percentiles[1] - self.percentiles[0])
+        lower_bound = int(lower_bound) - int(width * self.percentiles[0])
+        upper_bound = int(upper_bound) + int(width * (1 - self.percentiles[1]))
         return lower_bound, upper_bound
 
     def _normalize_signal_probabilities(self, signal_probabilities: torch.Tensor) -> torch.Tensor:
-        normalized_signal_probabilities = signal_probabilities - signal_probabilities.min()
-        normalized_signal_probabilities /= normalized_signal_probabilities.sum()
+        normalized_signal_probabilities = signal_probabilities / signal_probabilities.sum()
         return normalized_signal_probabilities.squeeze()
 
     def _fill_buffer(self, buffer: torch.Tensor, thetas: torch.Tensor, rhos: torch.Tensor, mode: str) -> torch.Tensor:
@@ -277,7 +285,9 @@ class Cropper(torch.nn.Module):
 
         return aspect
 
-    def _calculate_destination_points(self, H: int, W: int, source_points: torch.Tensor) -> torch.Tensor:
+    def _calculate_destination_points(
+        self, H: int, W: int, source_points: torch.Tensor, alpha: float = 0.9
+    ) -> torch.Tensor:
         aspect_ratio_source = self._get_approximate_aspect_ratio(source_points)
 
         if W < aspect_ratio_source * H:
@@ -297,4 +307,11 @@ class Cropper(torch.nn.Module):
                 [(W - target_W) / 2, H],
             ]
 
-        return torch.tensor(destination_points)
+        default_destination_points = [
+            [W / 2, H / 2],
+            [W / 2, H / 2],
+            [W / 2, H / 2],
+            [W / 2, H / 2],
+        ]
+
+        return alpha * torch.tensor(destination_points) + (1 - alpha) * torch.tensor(default_destination_points)

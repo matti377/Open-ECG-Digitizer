@@ -1,9 +1,11 @@
-from torchvision.io import read_image
-from src.model.perspective_detector import PerspectiveDetector
-from src.model.cropper import Cropper
+import os
+
 import matplotlib.pyplot as plt
 import torch
-import os
+from torchvision.io import read_image
+
+from src.model.cropper import Cropper
+from src.model.perspective_detector import PerspectiveDetector
 
 
 def show_image(image: torch.Tensor, save_path: str) -> None:

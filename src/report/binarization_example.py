@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
+import mpl_toolkits  # type: ignore
 import numpy as np
 import torch
-from torchvision.io import read_image
-from torch.nn.functional import max_pool2d
 from skimage.feature import peak_local_max
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes  # type: ignore
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+from torch.nn.functional import max_pool2d
+from torchvision.io import read_image
+
 from src.model.perspective_detector import PerspectiveDetector
 
 LARGEFONT = 20
@@ -47,7 +47,9 @@ def main() -> None:
     # reverse along axis 0
     binary_image_copy[YSTART : YSTART + SZ, XSTART : XSTART + SZ] = part_of_binary_image.flip(0)
     # Create an inset axes
-    ax_inset = zoomed_inset_axes(axs[0, 1], zoom=6, loc="upper right", borderpad=0.5)
+    ax_inset = mpl_toolkits.axes_grid1.inset_locator.zoomed_inset_axes(
+        axs[0, 1], zoom=6, loc="upper right", borderpad=0.5
+    )
     ax_inset.imshow(binary_image_copy, cmap=CMAP, interpolation="nearest", origin="upper")
     ax_inset.set_xlim(XSTART, XSTART + SZ)
     ax_inset.set_ylim(YSTART, YSTART + SZ)
@@ -56,7 +58,7 @@ def main() -> None:
     ax_inset.spines["top"].set_color("C3")
     ax_inset.spines["right"].set_color("C3")
     ax_inset.spines["left"].set_color("C3")
-    mark_inset(axs[0, 1], ax_inset, loc1=4, loc2=2, fc="none", ec="C3")
+    mpl_toolkits.axes_grid1.mark_inset(axs[0, 1], ax_inset, loc1=4, loc2=2, fc="none", ec="C3")
     axs[0, 1].set_title("Binary Image", fontsize=LARGEFONT, pad=10)
 
     # fig, axs = plt.subplots(1, 2, figsize=(30, 15))

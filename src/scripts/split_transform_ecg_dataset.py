@@ -1,11 +1,13 @@
 import os
 import shutil
+from typing import Any, Dict, List, Tuple
+
 import torch
+from torchvision.io import decode_image, write_png
 from tqdm import tqdm
-from typing import Dict, Any, List, Tuple
+
 from src.config.default import get_cfg
 from src.utils import import_class_from_path
-from torchvision.io import decode_image, write_png
 
 
 def get_file_id(file: str) -> str:
