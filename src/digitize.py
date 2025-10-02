@@ -173,9 +173,18 @@ if __name__ == "__main__":
         default="inference_wrapper.yml",
         help="Config file name or path (searched in . and src/config/). Default: inference_wrapper.yml",
     )
+    parser.add_argument(
+        "--images_path",
+        type=str,
+        default=None,
+        help="Path to images folder.",
+    )
     args = parser.parse_args()
 
     config_path = find_config_path(args.config)
     cfg = get_cfg(config_path)
+
+    if args.images_path:
+        cfg.DATA.images_path = args.images_path
 
     main(cfg)
