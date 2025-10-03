@@ -31,8 +31,8 @@ This repository provides a highly configurable tool for digitizing 12-lead ECGs,
 ## Running inference on a folder with images
 1. Modify a config file with your paths and settings, for example [src/config/inference_wrapper_ahus_testset.yml](src/config/inference_wrapper_ahus_testset.yml)
 2. Ensure that your config file points to a layout file containing your expected layouts, for example [lead_layouts_reduced.yml](src/config/lead_layouts_reduced.yml) or [lead_layouts_george-moody-2024.yml](src/config/lead_layouts_george-moody-2024.yml)
-3. Run: ```python3 -m src.evaluate --config src/config/your_config_file.yml```
-4. You can also override the config file, for example: ```python3 -m src.evaluate --config src/config/your_config_file.yml DATA.output_path=my_output/folder```
+3. Run: ```python3 -m src.digitize --config src/config/your_config_file.yml```
+4. You can also override the config file, for example: ```python3 -m src.digitize --config src/config/your_config_file.yml DATA.output_path=my_output/folder```
 
 
 ## Train on custom dataset
