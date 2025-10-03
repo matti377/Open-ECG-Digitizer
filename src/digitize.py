@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import warnings
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -32,10 +33,11 @@ def clear_and_prepare_output_dir(config: CN) -> None:
     output_path: str = config.DATA.output_path
     if os.path.exists(output_path):
         for root, dirs, files in os.walk(output_path, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
+            if config.DATA.get("clear_output_dir_if_exists", False):
+                for name in files:
+                    os.remove(os.path.join(root, name))
+                for name in dirs:
+                    os.rmdir(os.path.join(root, name))
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     copy_file_structure(config.DATA.images_path, output_path)
@@ -189,21 +191,42 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default="inference_wrapper.yml",
-        help="Config file name or path (searched in . and src/config/). Default: inference_wrapper.yml",
+        help="Config file name or path (searched in . and src/config/)",
     )
     parser.add_argument(
-        "--images_path",
-        type=str,
-        default=None,
-        help="Path to images folder.",
+        "overrides",
+        nargs="*",
+        help="Override config options like A.B.C=123 or DATA.save_mode='png_only' (spaces require quotes).",
     )
     args = parser.parse_args()
 
     config_path = find_config_path(args.config)
     cfg = get_cfg(config_path)
 
-    if args.images_path:
-        cfg.DATA.images_path = args.images_path
+    if args.overrides:
+        kv_list: list[str] = []
+        for ov in args.overrides:
+            if "=" not in ov:
+                raise ValueError(f"Malformed override '{ov}'. Use KEY=VALUE (e.g., MODEL.device='cuda:0').")
+            k, v = ov.split("=", 1)
+
+            # Check if key exists in config before merging
+            node = cfg
+            key_parts = k.split(".")
+            exists = True
+            for part in key_parts[:-1]:
+                if part in node:
+                    node = node[part]
+                else:
+                    exists = False
+                    break
+            if not exists or key_parts[-1] not in node:
+                warnings.warn(f"Config key '{k}' not found in loaded config. Override skipped.")
+                continue
+
+            kv_list.extend([k, v])
+
+        if kv_list:
+            cfg.merge_from_list(kv_list)
 
     main(cfg)
