@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.1 (2025-10-03)
+
+### Bug Fixes
+
+- Typo in readme
+  ([`1c052ff`](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/commit/1c052ff052eb41a8a611f2c4ff448d36460a411a))
+
+
 ## v1.9.0 (2025-10-03)
 
 ### Documentation
