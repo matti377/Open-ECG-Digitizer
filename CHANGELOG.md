@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.9.2 (2025-10-20)
+
+### Bug Fixes
+
+- Remove non-model code
+  ([`c1b41e0`](https://github.com/Ahus-AIM/Open-ECG-Digitizer/commit/c1b41e0bf56e59167e7ba9a03977e8fae3ec886a))
+
+### Documentation
+
+- Add module details to readme
+  ([`2c43b09`](https://github.com/Ahus-AIM/Open-ECG-Digitizer/commit/2c43b09646ec1fcb06a095d40438952f7843134e))
+
+- Specify output units
+  ([`316f71d`](https://github.com/Ahus-AIM/Open-ECG-Digitizer/commit/316f71ded52d370e9bf6e7e4c40cbd6f57076c37))
+
+
 ## v1.9.1 (2025-10-03)
 
 ### Bug Fixes
