@@ -26,7 +26,6 @@ def plot_ecg(csv_path, fs=500):
 
     fig, axes = plt.subplots(4, 3, figsize=(12, 8), sharex=True)
 
-    # Determine amplitude from real values only
     valid_values = signals[~np.isnan(signals)]
     ylim = max(1.5, np.percentile(np.abs(valid_values), 99) * 1.2) if len(valid_values) else 2
 
@@ -41,38 +40,41 @@ def plot_ecg(csv_path, fs=500):
                 signal = signals[:, idx]
 
                 if np.isnan(signal).all():
-                    print(f"WARNING: Lead {lead} contains no data.")
                     ax.text(0.5, 0.5, "NO DATA",
                             transform=ax.transAxes,
                             ha="center", va="center",
                             fontsize=10, color="red")
                 else:
-                    # Plot real data only
+                    # Plot real data
                     valid_mask = ~np.isnan(signal)
-                    ax.plot(time[valid_mask], signal[valid_mask],
-                            linewidth=1, color="blue")
+                    ax.plot(time[valid_mask],
+                            signal[valid_mask],
+                            color="blue",
+                            linewidth=1)
 
-                    # Interpolate for gap visualization
+                    # Interpolated full signal (for gap reconstruction)
                     interp_signal = pd.Series(signal).interpolate().values
 
-                    # Identify gap segments
+                    # Detect contiguous NaN segments
                     nan_mask = np.isnan(signal)
-                    gap_indices = np.where(nan_mask)[0]
 
-                    if len(gap_indices) > 0:
-                        print(f"Lead {lead}: {len(gap_indices)} missing samples filled in red.")
+                    # Find start and end indices of NaN blocks
+                    diff = np.diff(nan_mask.astype(int))
+                    gap_starts = np.where(diff == 1)[0] + 1
+                    gap_ends = np.where(diff == -1)[0] + 1
 
-                        ax.plot(time[nan_mask],
-                                interp_signal[nan_mask],
-                                linewidth=1,
-                                color="red")
+                    # Edge cases: start/end with NaN
+                    if nan_mask[0]:
+                        gap_starts = np.insert(gap_starts, 0, 0)
+                    if nan_mask[-1]:
+                        gap_ends = np.append(gap_ends, len(signal))
 
-            else:
-                print(f"WARNING: Lead {lead} not found in CSV.")
-                ax.text(0.5, 0.5, "MISSING",
-                        transform=ax.transAxes,
-                        ha="center", va="center",
-                        fontsize=10, color="red")
+                    # Plot only missing segments
+                    for start, end in zip(gap_starts, gap_ends):
+                        ax.plot(time[start:end],
+                                interp_signal[start:end],
+                                color="red",
+                                linewidth=1)
 
             ax.set_ylim(-ylim, ylim)
             ax.set_xticks(np.arange(0, time.max(), 0.2))
