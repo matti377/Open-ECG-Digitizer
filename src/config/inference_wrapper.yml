@@ -46,17 +46,17 @@ MODEL:
         unet_weight_path: './weights/lead_name_unet_weights_07072025.pt'
         KWARGS:
           debug: false
-          device: 'cuda'
+          device: 'cpu'
           possibly_flipped: false
 
-    device: 'cuda'
+    device: 'cpu'
     resample_size: 3000
     rotate_on_resample: true
     enable_timing: false
     apply_dewarping: false
 
 DATA:
-  images_path: '/dataset/ecg-digitization/images_and_scans_with_csvs_labeled_2/'
+  images_path: 'input_ecg'
   image_extensions: ['.png', '.jpg', '.jpeg', '.JPG']
   output_path: 'sandbox/inference_output'
   save_mode: 'all'

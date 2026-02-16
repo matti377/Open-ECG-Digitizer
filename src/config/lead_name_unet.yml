@@ -35,7 +35,7 @@ TRAIN:
   KWARGS:
     epochs: 30
     metrics: []
-    device: 'cuda'
+    device: 'cpu'
 
 HYPERPARAMETER_SEARCH:
   SEARCH_SPACE: false
@@ -47,7 +47,7 @@ DATALOADER:
     shuffle: False
     num_workers: 8
     pin_memory: True
-    pin_memory_device: 'cuda'
+    pin_memory_device: 'cpu'
     prefetch_factor: 6
     drop_last: True
 
