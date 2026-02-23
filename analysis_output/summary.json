@@ -1,0 +1,107 @@
+{
+  "record_name": "record",
+  "sampling_rate_hz": 500,
+  "n_samples": 1169,
+  "n_leads": 12,
+  "lead_names": [
+    "I",
+    "II",
+    "III",
+    "aVR",
+    "aVL",
+    "aVF",
+    "V1",
+    "V2",
+    "V3",
+    "V4",
+    "V5",
+    "V6"
+  ],
+  "warnings": [
+    "Very short ECG clip (<4s): limited analysis. HR may work, interval/delineation metrics may fail.",
+    "Beat delineation failed; interval metrics unavailable."
+  ],
+  "screening_flags": [
+    "Rhythm appears relatively regular"
+  ],
+  "duration_seconds": 2.338,
+  "lead_trial_summary": [
+    {
+      "lead_index": 1,
+      "lead_name": "II",
+      "status": "ok",
+      "mode": "short_fallback",
+      "polarity": "as_is",
+      "rpeak_count": 2,
+      "score": 21.90222823025279,
+      "hr_median_bpm": 77.720207253886
+    },
+    {
+      "lead_index": 0,
+      "lead_name": "I",
+      "status": "ok",
+      "mode": "short_fallback",
+      "polarity": "as_is",
+      "rpeak_count": 3,
+      "score": 31.880820961875994,
+      "hr_median_bpm": 75.12034297748583
+    },
+    {
+      "lead_index": 10,
+      "lead_name": "V5",
+      "status": "ok",
+      "mode": "short_fallback",
+      "polarity": "as_is",
+      "rpeak_count": 2,
+      "score": 21.92339875204512,
+      "hr_median_bpm": 76.72634271099744
+    },
+    {
+      "lead_index": 11,
+      "lead_name": "V6",
+      "status": "ok",
+      "mode": "short_fallback",
+      "polarity": "as_is",
+      "rpeak_count": 2,
+      "score": 21.933284298252016,
+      "hr_median_bpm": 76.92307692307692
+    },
+    {
+      "lead_index": 7,
+      "lead_name": "V2",
+      "status": "ok",
+      "mode": "short_fallback",
+      "polarity": "as_is",
+      "rpeak_count": 3,
+      "score": 31.87857851131629,
+      "hr_median_bpm": 74.86202267303102
+    },
+    {
+      "lead_index": 2,
+      "lead_name": "III",
+      "status": "ok",
+      "mode": "short_fallback",
+      "polarity": "as_is",
+      "rpeak_count": 3,
+      "score": 31.948562298454434,
+      "hr_median_bpm": 79.01357785956375
+    }
+  ],
+  "analysis_lead_index": 2,
+  "analysis_lead_name": "III",
+  "analysis_mode": "short_fallback",
+  "analysis_polarity": "as_is",
+  "n_successful_leads": 6,
+  "multi_lead_hr_consensus_bpm": 76.82470981703719,
+  "rr_count": 2,
+  "hr_mean_bpm": 79.01357785956375,
+  "hr_median_bpm": 79.01357785956375,
+  "hr_min_bpm": 76.72634271099744,
+  "hr_max_bpm": 81.30081300813008,
+  "rr_std_ms": 22.00000000000002,
+  "rmssd_ms": 44.00000000000004,
+  "pnn50_pct": 0.0,
+  "ai_summary": {
+    "ai_model": "skipped (no beat features)"
+  }
+}

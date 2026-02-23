@@ -61,6 +61,6 @@ MODEL:
 DATA:
   images_path: 'input_ecg'
   image_extensions: ['.png', '.jpg', '.jpeg', '.JPG']
-  output_path: 'sandbox/inference_output'
+  output_path: 'output_data'
   save_mode: 'all'
   layout_should_include_substring: false

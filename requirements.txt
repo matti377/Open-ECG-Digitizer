@@ -21,3 +21,8 @@ plotly
 ipywidgets
 opencv-python
 torch-tps
+
+#for evaluation
+setuptools
+wfdb
+heartpy
