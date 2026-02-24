@@ -679,7 +679,7 @@ def main():
     print("\n=== BASIC ECG ANALYSIS (SCREENING, NOT DIAGNOSIS) ===")
     print(json.dumps(result, indent=2, default=lambda x: None))
 
-    out_dir = Path("analysis_output")
+    out_dir = Path("output_data/analysis_output")
     out_dir.mkdir(exist_ok=True)
 
     with open(out_dir / "summary.json", "w", encoding="utf-8") as f:
