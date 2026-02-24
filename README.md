@@ -1,96 +1,244 @@
-# Open ECG Digitizer
+# ECG Analysis with Artificial Intelligence
 
-[![arXiv](https://img.shields.io/badge/arXiv-2510.19590-00cc66.svg)](https://arxiv.org/abs/2510.19590) ![Tests](https://github.com/Ahus-AIM/Electrocardiogram-Digitization/actions/workflows/test.yml/badge.svg?branch=main) ![](https://img.shields.io/badge/%20style-google-3666d6.svg) [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-31211/)
+This project builds on **Open-ECG-Digitizer** and adds a workflow for:
 
-This repository provides a highly configurable tool for digitizing 12-lead ECGs, extracting raw time series data from scanned images or photographs (e.g., taken with a phone). It supports any subset of the 12 standard leads and is robust to perspective distortions and image quality variations.
+- digitizing printed 12-lead ECGs from photos,
+- visualizing the reconstructed signal,
+- converting the result to **WFDB** (`.dat` / `.hea`),
+- and running a basic **heart-rate / rhythm analysis** (Pan–Tompkins-based).
 
-<div style="display: flex; justify-content: center; gap: 30px;">
-  <img src="assets/visual_abstract-img0.png" alt="Mobile phone photo" width="31%">
-  <img src="assets/visual_abstract-img1.png" alt="Segmented mobile phone photo" width="31%">
-  <img src="assets/visual_abstract-img2.png" alt="Segmented and perspective corrected mobile phone photo" width="36.55%">
-</div>
+The goal is to support ECG interpretation as a **decision-support tool** from printed ECGs (for example, prehospital ECG printouts).
 
-## Features
+---
 
-- Extracts raw time series data from 12-lead ECG images
-- Supports both scanned and photographed ECGs (with perspective correction)
-- Works with any subset of leads
-- Easily configurable via yaml config files
+## Table of Contents
 
-## File structure and module overview
+- [Idea](#idea)
+- [How it works](#how-it-works)
+- [ECG Digitization](#ecg-digitization)
+- [Setup](#setup)
+- [How to use](#how-to-use)
+  - [1) Running the digitization pipeline](#1-running-the-digitization-pipeline)
+  - [2) Visualization of the extracted data](#2-visualization-of-the-extracted-data)
+  - [3) Conversion to WFDB (.dat / .hea)](#3-conversion-to-wfdb-dat--hea)
+  - [4) Analysis: Heart rate (Pan–Tompkins-based)](#4-analysis-heart-rate-pan--tompkins-based)
+- [Project structure](#project-structure)
+- [Notes and limitations](#notes-and-limitations)
+- [Credits](#credits)
 
-Each component of the ECG digitization pipeline is modularized under [`src/model`](src/model).  
+---
 
-<p align="center">
-  <img src="assets/pipeline-overview.svg" alt="Pipeline Overview" width="100%">
-</p>
+## Idea
 
-Below is an overview of their purpose and debugging relevance, in approximate execution order:
+The idea for this project came from work in prehospital emergency care.
 
-| Module | Description |
-|:--------|:-------------|
-| [`src/model/unet.py`](src/model/unet.py) | **Semantic segmentation network** - a U-Net model trained to identify ECG traces, grids, and background. Retrain or fine-tune it using [`src/train.py`](src/train.py) if it underperforms. You can modify the on-the-fly transforms to mimic your own data [`src/transform/vision.py`](src/transform/vision.py). |
-| ([`src/model/dewarper.py`](src/model/dewarper.py)) | **Experimental full dewarping** - for folded or curved ECG paper. Not formally evaluated. Not recommended for flat papers, as perspective correction is more robust. Not enabled in the provided configuration YAML files. |
-| [`src/model/perspective_detector.py`](src/model/perspective_detector.py) | **Perspective correction** - estimates and corrects projective distortions. Handles up to ~45° rotation. |
-| [`src/model/cropper.py`](src/model/cropper.py) | **Cropping and bounding box extraction** - used to crop the image based on the location of the ECG leads. |
-| [`src/model/pixel_size_finder.py`](src/model/pixel_size_finder.py) | **Grid size estimation** - autocorrelation-based template matching. Configure grid parameters (minor/major ratio, expected line counts) in your inference YAML in case this underperforms. |
-| [`src/model/lead_identifier.py`](src/model/lead_identifier.py) | **Layout identification** - matches cropped regions to known ECG lead layouts using predefined templates. Update or prune templates in `src/config/lead_layouts_*.yml`. |
-| [`src/model/signal_extractor.py`](src/model/signal_extractor.py) | **Segmentation-to-trace conversion** - converts segmented images into digitized voltage–time signals. Might set parts of signals to NaN in case of overlapping signals. |
-| [`src/model/inference_wrapper.py`](src/model/inference_wrapper.py) | **Main orchestration script** - connects all components. |
+In ambulance care, 12-lead ECGs are recorded to assess the heart's electrical activity. This helps identify time-critical conditions such as:
 
-**Questions or in need of help?** Contact elias.stenhede at ahus.no
+- acute myocardial infarction (STEMI),
+- certain arrhythmias,
+- and other cardiac abnormalities.
 
-## Installation
+The challenge is that paramedics are not cardiologists. We are trained to recognize key findings (for example ST-segment elevation, major AV blocks, or obvious rhythm disturbances), but not with the same depth as a specialist. In real interventions, there is also limited time, stress, movement, and noise.
 
-**Requirements:** Python 3.12 or later.
+An AI-based tool that analyzes a photo of a printed ECG could provide useful additional clues during interventions.
 
-> [!NOTE]
-> This setup has been tested on Ubuntu 24.04.2 and Debian 12 with CUDA. You need to install git-lfs to download the weights.
+> **Important:** This project is intended as a **decision-support tool**. It does **not** replace clinical judgment, medical protocols, or physician interpretation.
 
-1. Ensure you have installed python3.12, git and git-lfs.
-2. Clone the repository: ```git clone git@github.com:Ahus-AIM/Electrocardiogram-Digitization.git```
-3. Navigate to the project_source_code folder.
-4. Create and activate a virtual environment: ```python3.12 -m venv venv && source venv/bin/activate```
-5. Install dependencies ```python3 -m pip install -r requirements.txt```
-6. Download the pre-trained weights: ```git lfs pull```
+---
 
-## Running inference on a folder with images
-1. Modify a config file with your paths and settings, for example [src/config/inference_wrapper_ahus_testset.yml](src/config/inference_wrapper_ahus_testset.yml)
-2. Ensure that your config file points to a layout file containing your expected layouts, for example [lead_layouts_reduced.yml](src/config/lead_layouts_reduced.yml) or [lead_layouts_george-moody-2024.yml](src/config/lead_layouts_george-moody-2024.yml)
-3. Run: ```python3 -m src.digitize --config src/config/your_config_file.yml```
-4. You can also override the config file, for example: ```python3 -m src.digitize --config src/config/your_config_file.yml DATA.output_path=my_output/folder```
+## How it works
 
-> [!NOTE]
-> The output values are expressed in **microvolts (µV)**.
+The system uses a **multi-stage AI pipeline**.
 
-## Training dataset
-The dataset is publicly available on Hugging Face:
-[huggingface.co/datasets/Ahus-AIM/Open-ECG-Digitizer-Development-Dataset](https://huggingface.co/datasets/Ahus-AIM/Open-ECG-Digitizer-Development-Dataset)
+### Input
+- A photo of a printed **12-lead ECG**
 
-### Dataset characteristics
-- Multiple grid types, colors and sizes
-- Perspective distortions, varying illumination, and noise
-- Pixel-level annotations for ECG traces, grid, and background
+### Processing stages
+1. **ECG image digitization**  
+   The printed waveform is converted into a machine-readable signal (time series).
 
-The dataset is intended to support:
-- Retraining or fine-tuning of the segmentation network
-- Development of alternative ECG digitization approaches
+2. **Signal reconstruction and export**
+   - digital ECG trace visualization
+   - CSV export of waveform samples
+   - conversion to **WFDB** (`.dat` / `.hea`)
 
-## Train on custom dataset
-1. Change `data_path` for TRAIN, VAL and TEST in [src/config/unet.yml](src/config/unet.yml) to the locations of the custom dataset.
-2. Run: ```python3 -m src.train```
+3. **Signal-based analysis**
+   - basic measurements (e.g., heart rate via RR intervals)
+   - downstream AI/rhythm/morphology models (future/optional)
 
-## Mandatory Citation
+### Why digitization is needed
+Most ECG interpretation models expect **digitally sampled waveform data**, not photos of paper ECGs.  
+Because of that, direct end-to-end interpretation from the image was not used in this implementation.
 
-If you use this code or dataset in your research, **please cite the following paper**:
-```bibtex
-@article{stenhede_digitizing_2026,
-  title        = {Digitizing Paper {ECGs} at Scale: An Open-Source Algorithm for Clinical Research},
-  author       = {Stenhede, Elias and Bjørnstad, Agnar Martin and Ranjbar, Arian},
-  journal      = {npj Digital Medicine},
-  year         = {2026},
-  doi          = {10.1038/s41746-025-02327-1},
-  url          = {https://doi.org/10.1038/s41746-025-02327-1},
-  shorttitle   = {Digitizing Paper {ECGs} at Scale}
-}
+---
 
+## ECG Digitization
+
+For the ECG digitization step, this project uses the **Open-ECG-Digitizer** project developed by Akershus University Hospital.
+
+### Layout adaptation (important)
+The original model configuration did not work directly with our ECG printouts because the lead layout was different.
+
+- **Original setup:** precordial leads (V1–V6) arranged vertically
+- **Our setup (Lifepak 15):** **3 × 4 layout**
+  - limb leads: I, II, III, aVR, aVL, aVF
+  - precordial leads: V1–V6
+
+Because of this mismatch, the configuration files were adapted so the model can correctly detect and assign leads in the printed format used in this project.
+
+---
+
+## Setup
+
+The pipeline requires **Python 3.12**.
+
+You can install from GitHub (or use a ZIP archive), then create a virtual environment and install dependencies.
+
+### Windows (example)
+```bash
+python3.12 -m venv openecg-env
+openecg-env\Scripts\activate.bat
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Linux/macOS (example)
+
+```bash
+python3.12 -m venv openecg-env
+source openecg-env/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+This installs all required packages from `requirements.txt`.
+
+---
+
+## How to use
+
+### 1) Running the digitization pipeline
+
+Place a paper ECG image (`.jpg`) in the `input_ecg` directory, then run:
+
+```bash
+python3 -m src.digitize --config src\config\inference_wrapper.yml
+```
+
+> On Linux/macOS, use `/` instead of `\` in paths if needed.
+
+### Output
+
+When processing is complete, results are written to `output_data`.
+
+This includes:
+
+* a visualization of the digitization pipeline output (quality control),
+* a CSV export of the reconstructed ECG signal data for downstream analysis.
+
+---
+
+### 2) Visualization of the extracted data
+
+To inspect the reconstructed ECG signal after digitization, use the plotting script:
+
+```bash
+python3 scripts/plot_12lead.py output_data/digitalization/IMAGENAME_timeseries_canonical.csv
+```
+
+This script loads the exported canonical time-series CSV and renders it as a digital 12-lead ECG view.
+
+### Purpose
+
+* post-processing validation
+* signal quality inspection
+* detection of obvious digitization errors before downstream analysis
+
+---
+
+### 3) Conversion to WFDB (.dat / .hea)
+
+Many ECG analysis pipelines require **WFDB** format:
+
+* `.dat` → signal samples
+* `.hea` → metadata (sampling rate, leads, record structure, etc.)
+
+To convert the digitized canonical CSV to WFDB:
+
+```bash
+python3 scripts/csv_to_wfdb.py output_data/digitalization/IMAGENAME_timeseries_canonical.csv
+```
+
+This enables interoperability with ECG processing libraries and AI-based interpretation models.
+
+---
+
+### 4) Analysis: Heart rate (Pan–Tompkins-based)
+
+For signal-based ECG analysis, use the rhythm detector script:
+
+```bash
+python3 scripts/ecg_rythm_detector.py output_data/wfdb/record
+```
+
+This script applies a **Pan–Tompkins-style QRS detection pipeline** and computes:
+
+* detected beat count
+* RR intervals
+* heart-rate statistics (mean / min / max BPM)
+
+---
+
+## Project structure
+
+```text
+.
+├── input_ecg/
+│   └── *.jpg
+├── output_data/
+│   ├── digitalization/
+│   │   ├── *_timeseries_canonical.csv
+│   │   └── ... (quality-control outputs)
+│   └── wfdb/
+│       ├── record.dat
+│       └── record.hea
+├── scripts/
+│   ├── plot_12lead.py
+│   ├── csv_to_wfdb.py
+│   └── ecg_rythm_detector.py
+├── src/
+│   ├── digitize.py
+│   └── config/
+│       └── inference_wrapper.yml
+└── README.md
+```
+
+---
+
+## Notes and limitations
+
+* This project analyzes **photos of printed ECGs**, so quality depends on:
+
+  * photo angle,
+  * lighting,
+  * print quality,
+  * and paper layout.
+* The digitizer configuration must match the ECG print layout.
+* The heart-rate script provides **basic rhythm metrics** and is not a full diagnostic interpretation system.
+* This tool is for **support**, not for standalone diagnosis.
+
+---
+
+## Credits
+
+This project is based on:
+
+* **Open-ECG-Digitizer** (Akershus University Hospital)
+
+I added functions and scripts for:
+
+* ECG visualization,
+* WFDB conversion,
+* and Pan–Tompkins-based heart-rate analysis.
+
+If you use the original digitization code in research, please also follow the citation requirements from the upstream project.
