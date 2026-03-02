@@ -61,6 +61,6 @@ MODEL:
 DATA:
   images_path: 'input_ecg'
   image_extensions: ['.png', '.jpg', '.jpeg', '.JPG']
-  output_path: 'output_data'
+  output_path: 'output_data/digitalisation'
   save_mode: 'all'
   layout_should_include_substring: false

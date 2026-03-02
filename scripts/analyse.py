@@ -79,7 +79,7 @@ def tachy_brady_flag(hr_bpm: float):
         return "Bradycardia range (<60 bpm)"
     if hr_bpm > 100:
         return "Tachycardia range (>100 bpm)"
-    return "Normal range (60–100 bpm)"
+    return "Normal range (60 - 100 bpm)"
 
 
 def estimate_st_deviation(clean: np.ndarray, rpeaks: np.ndarray, fs: int) -> float:
